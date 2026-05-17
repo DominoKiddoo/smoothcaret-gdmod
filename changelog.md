@@ -1,3 +1,6 @@
+# 1.0.6
+- Added new awesome caret colour settings :D
+
 # 1.0.5
 - Fixed crash on startup MacOS
 

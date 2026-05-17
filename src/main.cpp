@@ -1,8 +1,9 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/CCTextInputNode.hpp>
 #include <Geode/ui/Popup.hpp>
-using namespace geode::prelude;
+#include <Geode/cocos/extensions/GUI/CCControlExtension/CCControlUtils.h>
 
+using namespace geode::prelude;
 class ModSettingsPopup : public geode::Popup {};
 
 class $modify(MyCCTextInputNode, CCTextInputNode) {
@@ -50,7 +51,19 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 			}
 
 			auto smoothCaret = CCLabelBMFont::create("|", "chatFont.fnt");
-			smoothCaret->setColor(trueCaret->getColor());
+
+			auto cColType = Mod::get()->getSettingValue<std::string>("col-type");
+			bool isChroma = false;
+			if (cColType == "Chroma") {
+				isChroma = true;
+			}
+
+			if (Mod::get()->getSettingValue<bool>("custom-colour") && isChroma) {
+				smoothCaret->setColor(ccColor3B(255, 0, 0)); 
+			} else {
+				smoothCaret->setColor(trueCaret->getColor());
+			}
+			
 			smoothCaret->setOpacity(trueCaret->getOpacity());
 
 			smoothCaret->setContentSize(trueCaret->getContentSize());
@@ -72,6 +85,7 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 			aliveNode->m_fields->m_smoothCaret = smoothCaret;
 			return;
 		});
+
 		return true;
     }
 
@@ -85,7 +99,6 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
     	CCPoint targetPos = trueCaret->getPosition();
 
 		// make sure settings are applied
-		smoothCaret->setColor(trueCaret->getColor());
 
 		smoothCaret->setContentSize(trueCaret->getContentSize());
 		smoothCaret->setAnchorPoint(trueCaret->getAnchorPoint());
@@ -111,6 +124,41 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 
 		smoothCaret->setPosition(newX, newY);
 		smoothCaret->setVisible(trueCaret->isVisible());
+
+		// colour stuff!!!
+		if (Mod::get()->getSettingValue<bool>("custom-colour")) {
+			auto colType = Mod::get()->getSettingValue<std::string>("col-type");
+			if (colType == "Static Colour") {
+				smoothCaret->setColor(Mod::get()->getSettingValue<cocos2d::ccColor3B>("col"));
+			} else {
+				// RAINBOW STUFFS!!
+				ccColor3B oldCol = smoothCaret->getColor();
+
+				// caret col to rgba
+				cocos2d::extension::RGBA rgba;
+				rgba.r = oldCol.r / 255.0f;
+				rgba.g = oldCol.g / 255.0f;
+				rgba.b = oldCol.b / 255.0f;
+				rgba.a = 1.0f;
+
+				// caret col to hsv
+				cocos2d::extension::HSV toHSV = cocos2d::extension::CCControlUtils::HSVfromRGB(rgba);
+
+				// add hue
+				toHSV.h += (Mod::get()->getSettingValue<float>("chroma-speed") * 10) * dt;
+				if (toHSV.h >= 360.0f) toHSV.h -= 360.0f;
+
+				// BACK to rgba
+				rgba = cocos2d::extension::CCControlUtils::RGBfromHSV(toHSV);
+
+				// turn THAT into ccColor3B (this is such a long process oml 😭😭)
+				ccColor3B finalCol = ccColor3B(rgba.r * 255, rgba.g * 255, rgba.b * 255);
+				smoothCaret->setColor(finalCol);
+			}
+			
+		} else {
+			smoothCaret->setColor(trueCaret->getColor());
+		}
 
 	}
 };

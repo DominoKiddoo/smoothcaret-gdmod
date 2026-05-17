@@ -8,7 +8,7 @@
 	},
 	"id": "dominodev.smoothcaret",
 	"name": "Smooth Caret",
-	"version": "v1.0.5",
+	"version": "v1.0.6",
 	"developer": "dominodev",
 	"description": "Lerp That Caret!",
 	"dependencies": {
@@ -28,6 +28,35 @@
 			"type": "bool",
 			"default": false,
 			"description": "Whether or not to do a cool stretch thingy."
+		},
+
+		"custom-colour":{
+			"type": "bool",
+			"default": false,
+			"name": "Custom Caret Colour",
+			"description": "Use a custom colour for the caret!"
+		},
+
+		"col-type":{
+			"type": "string",
+			"one-of": ["Static Colour", "Chroma"],
+			"default": "Static Colour",
+			"name": "Colour Type",
+			"description": "Type of <cr>custom colour!</c>. Static is for the colour to <cb>stay the same</c>, and chroma is to <c-ff0000>g</c><c-ff4100>a</c><c-ff8200>y</c><c-feb500>i</c><c-fdda00>f</c><c-fbff00>y</c><c-97ff22> </c><c-32ff44>t</c><c-00e077>h</c><c-00a1bb>e</c><c-0062ff> </c><c-243bff>c</c><c-4714ff>a</c><c-7a00fd>r</c><c-bd00fa>e</c><c-ff00f7>t</c>"
+		},
+
+		"col":{
+			"type": "color",
+			"name": "Static Colour",
+			"default": "#FF0000",
+			"description": "The custom caret colour! Only works if the <cb>'Colour Type'</c> is set to <co>'Static Colour'</c>"
+		},
+
+		"chroma-speed":{
+			"type": "float",
+			"default": 10,
+			"description": "How fast it changes colours. Higher is faster, lower is slower.",
+			"min": 1
 		}
 	},
 
