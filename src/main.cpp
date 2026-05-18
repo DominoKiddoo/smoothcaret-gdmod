@@ -1,15 +1,149 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/CCTextInputNode.hpp>
-#include <Geode/ui/Popup.hpp>
-#include <Geode/cocos/extensions/GUI/CCControlExtension/CCControlUtils.h>
+#include <nwo5.silly-api/include/utils/include.hpp>
+#include "settings.hpp"
 
 using namespace geode::prelude;
-class ModSettingsPopup : public geode::Popup {};
+
+class SmoothCaret final : public CCLabelBMFont {
+protected:
+	CCTextInputNode* m_inputNode = nullptr;
+	CCLabelBMFont* m_trueCaret = nullptr;
+
+	float m_baseScale;
+	
+	bool m_blinkVisible = true;
+
+	void copyTrueCaretValues(bool updateTransform) {
+		this->setContentSize(m_trueCaret->getContentSize());
+		this->setAnchorPoint(m_trueCaret->getAnchorPoint());
+		this->ignoreAnchorPointForPosition(m_trueCaret->isIgnoreAnchorPointForPosition());
+		this->setVisible(m_trueCaret->isVisible());
+		this->setColor(m_trueCaret->getColor());
+
+		if (updateTransform) {
+			this->setPosition(m_trueCaret->getPosition());
+			this->setScale(m_trueCaret->getScale());
+		}
+	}
+
+	bool init(CCTextInputNode* inputNode, CCLabelBMFont* trueCaret) {
+		if (!CCLabelBMFont::initWithString("|", "chatFont.fnt")) {
+			return false;
+		}
+
+		m_inputNode = inputNode;
+		m_trueCaret = trueCaret;
+
+		this->copyTrueCaretValues(true);
+
+		this->setOpacity(Settings::opacity);
+
+		m_baseScale = this->getScale();
+
+		return true;
+	}
+	
+	float getStretchScale(float dt, float newX, float oldX, float targetX) {
+		float dist = std::abs(oldX - targetX);
+		float velocity = std::abs((newX - oldX) / dt);
+
+		float stretch;
+		if (Settings::stretchMethod == "Logarithm") {
+			// different stretch intensity multipliers so they stretch somewhat similarly on the same stretch intensity settings (kinda)
+			float stretchIntensity = Settings::stretchIntensity * 5.0f;
+			stretch = std::log1pf(velocity * stretchIntensity);
+		} else if (Settings::stretchMethod == "Square Root") {
+			float stretchIntensity = Settings::stretchIntensity * 0.5f;
+			stretch = std::sqrt(velocity * stretchIntensity);
+		} else {
+			float stretchIntensity = Settings::stretchIntensity * 0.05f;
+			stretch = std::abs(velocity * stretchIntensity);
+		}
+
+		return std::clamp(1.0f + stretch, 1.0f, std::max(1.0f, dist / (this->getContentWidth() * m_baseScale)));
+	}
+
+	virtual void update(float dt) {
+		if (!m_trueCaret) {
+			return;
+		}
+
+		copyTrueCaretValues(false);
+    
+		CCPoint oldPos = this->getPosition();
+    	CCPoint targetPos = m_trueCaret->getPosition();
+		CCPoint newPos = ccpLerp(oldPos, targetPos, std::min(1.0f, Settings::weight * dt));
+
+		this->setPosition(newPos);
+		
+		if (Settings::stretchEnabled) {
+			float stretch = getStretchScale(dt, newPos.x, oldPos.x, targetPos.x);
+			float thickness = Settings::thickness;
+
+			// so stretch is still consistent with different caret thickness
+			if (stretch > 1.1f) {
+				thickness = 1.0f;
+			}
+
+			this->setScaleX(m_baseScale * thickness * stretch);
+		} else {
+			this->setScaleX(m_baseScale * Settings::thickness);
+		}
+
+		if (Settings::customColoursEnabled) {
+			if (Settings::chroma) {
+				this->setColor(nwo5::utils::getChroma<ccColor3B>(
+					Settings::chromaSpeed, false, Settings::chromaSaturation
+				));
+			} else {
+				this->setColor(Settings::caretColour);
+			}
+		}
+	}
+
+	void updateBlink(float dt = {}) {
+		if (Settings::blinkCursor) {
+			m_blinkVisible = !m_blinkVisible;
+		} else {
+			m_blinkVisible = true;
+		}
+
+		this->setOpacity(m_blinkVisible ? Settings::opacity : 0);
+	}
+
+public:
+	static SmoothCaret* create(CCTextInputNode* inputNode, CCLabelBMFont* trueCaret) {
+		auto ret = new SmoothCaret;
+
+		if (!ret->init(inputNode, trueCaret)) {
+			delete ret;
+
+			return nullptr;
+		}
+
+		ret->autorelease();
+
+		return ret;
+	}
+
+	void inputUpdated() {
+		m_blinkVisible = true;
+		this->setOpacity(Settings::opacity);
+
+		// fixes mod settings popup idk it apparently just unschedules shit when u type and i cant find y but wtv
+		// still kinda broken if u use sliders to adjust inputs but wtv good enough im tired
+		
+		this->scheduleUpdate(); // dont need to unschedule since there can only b one update function
+		
+		this->unschedule(schedule_selector(SmoothCaret::updateBlink));
+		this->schedule(schedule_selector(SmoothCaret::updateBlink), Settings::blinkSpeed);
+	}
+};
 
 class $modify(MyCCTextInputNode, CCTextInputNode) {
 	struct Fields {
-        CCLabelBMFont* m_trueCaret = nullptr;
-		CCLabelBMFont* m_smoothCaret = nullptr;
+		SmoothCaret* m_smoothCaret = nullptr;
     };
 
     bool init(float width, float height, char const* placeholder, char const* textFont, int fontSize, char const* labelFont) {
@@ -19,146 +153,46 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 
 		Ref<MyCCTextInputNode> aliveNode = this;
 
-		Loader::get()->queueInMainThread([aliveNode]() {
-			if (CCScene::get()->getChildByType<ModSettingsPopup>(0)) {
-				return; 
-			}
-
-			if (!aliveNode || !aliveNode->getParent()) return;
-
-			auto children = aliveNode->getChildren();
-			if (!children) return;
-
-			for (auto* child : CCArrayExt<CCNode*>(children)) {
-				if (auto* label = typeinfo_cast<CCLabelBMFont*>(child)) {
-					std::string_view content = label->getString();
-					if (content == "|") {
-						// log::info("fntfile: {}", label->getFntFile());
-						if (std::string_view(label->getFntFile()) == "chatFont.fnt" ) {
-							aliveNode->m_fields->m_trueCaret = label;
-							break;
-						}
-						
-					}
-				}
-			}
-
-			auto trueCaret = aliveNode->m_fields->m_trueCaret;
+		Loader::get()->queueInMainThread([aliveNode] () {
+			auto trueCaret = aliveNode->m_cursor;
 
 			if (!trueCaret) {
 				log::warn("Could not find the true caret");
+
 				return; 
 			}
 
-			auto smoothCaret = CCLabelBMFont::create("|", "chatFont.fnt");
-
-			auto cColType = Mod::get()->getSettingValue<std::string>("col-type");
-			bool isChroma = false;
-			if (cColType == "Chroma") {
-				isChroma = true;
-			}
-
-			if (Mod::get()->getSettingValue<bool>("custom-colour") && isChroma) {
-				smoothCaret->setColor(ccColor3B(255, 0, 0)); 
-			} else {
-				smoothCaret->setColor(trueCaret->getColor());
-			}
-			
-			smoothCaret->setOpacity(trueCaret->getOpacity());
-
-			smoothCaret->setContentSize(trueCaret->getContentSize());
-			smoothCaret->setAnchorPoint(trueCaret->getAnchorPoint());
-			smoothCaret->ignoreAnchorPointForPosition(trueCaret->isIgnoreAnchorPointForPosition());
-
-			smoothCaret->setPosition(trueCaret->getPosition());
-			smoothCaret->setScale(trueCaret->getScale());
-			
-
-			smoothCaret->setID("smooth-caret"_spr);
-			
 			trueCaret->setOpacity(0); // so you cant see it but then i can check later if its visible, and then steal it >:3
 
+			auto smoothCaret = SmoothCaret::create(aliveNode, trueCaret);
 
+			smoothCaret->setID("smooth-caret"_spr);
 			trueCaret->getParent()->addChild(smoothCaret);
 
-			aliveNode->schedule(schedule_selector(MyCCTextInputNode::updSmoothCaret));
 			aliveNode->m_fields->m_smoothCaret = smoothCaret;
-			return;
 		});
 
 		return true;
     }
 
-	void updSmoothCaret(float dt) {
+	void textChanged() {
+		CCTextInputNode::textChanged();
 
-		auto trueCaret = m_fields->m_trueCaret;
-		auto smoothCaret = m_fields->m_smoothCaret;
-		if (!trueCaret || !smoothCaret) return;
-
-		CCPoint oldPos = smoothCaret->getPosition();
-    	CCPoint targetPos = trueCaret->getPosition();
-
-		// make sure settings are applied
-
-		smoothCaret->setContentSize(trueCaret->getContentSize());
-		smoothCaret->setAnchorPoint(trueCaret->getAnchorPoint());
-		smoothCaret->ignoreAnchorPointForPosition(trueCaret->isIgnoreAnchorPointForPosition());
-
-		float lerpSpeed = Mod::get()->getSettingValue<float>("Weight"); 
-    
-		float newX = std::lerp(smoothCaret->getPositionX(), trueCaret->getPositionX(), std::min(1.0f, dt * lerpSpeed));
-		float newY = std::lerp(smoothCaret->getPositionY(), trueCaret->getPositionY(), std::min(1.0f, dt * lerpSpeed));
-
-		float velocityX = (newX - oldPos.x) / dt;
-
-		float stretchIntensity = 0.1; 
-   		float stretch = 1.0f + std::abs(velocityX) * stretchIntensity;
-
-		float baseScale = trueCaret->getScale();
-
-		if (Mod::get()->getSettingValue<bool>("Stretch")) {
-			smoothCaret->setScaleX(stretch * baseScale);
+		if (auto smoothCaret = m_fields->m_smoothCaret) {
+			smoothCaret->inputUpdated();
 		}
-		
-	
+	}
 
-		smoothCaret->setPosition(newX, newY);
-		smoothCaret->setVisible(trueCaret->isVisible());
+	// called on click
+	void updateCursorPosition(CCPoint position, CCRect rect) {
+		CCTextInputNode::updateCursorPosition(position, rect);
 
-		// colour stuff!!!
-		if (Mod::get()->getSettingValue<bool>("custom-colour")) {
-			auto colType = Mod::get()->getSettingValue<std::string>("col-type");
-			if (colType == "Static Colour") {
-				smoothCaret->setColor(Mod::get()->getSettingValue<cocos2d::ccColor3B>("col"));
-			} else {
-				// RAINBOW STUFFS!!
-				ccColor3B oldCol = smoothCaret->getColor();
-
-				// caret col to rgba
-				cocos2d::extension::RGBA rgba;
-				rgba.r = oldCol.r / 255.0f;
-				rgba.g = oldCol.g / 255.0f;
-				rgba.b = oldCol.b / 255.0f;
-				rgba.a = 1.0f;
-
-				// caret col to hsv
-				cocos2d::extension::HSV toHSV = cocos2d::extension::CCControlUtils::HSVfromRGB(rgba);
-
-				// add hue
-				toHSV.h += (Mod::get()->getSettingValue<float>("chroma-speed") * 10) * dt;
-				if (toHSV.h >= 360.0f) toHSV.h -= 360.0f;
-
-				// BACK to rgba
-				rgba = cocos2d::extension::CCControlUtils::RGBfromHSV(toHSV);
-
-				// turn THAT into ccColor3B (this is such a long process oml 😭😭)
-				ccColor3B finalCol = ccColor3B(rgba.r * 255, rgba.g * 255, rgba.b * 255);
-				smoothCaret->setColor(finalCol);
-			}
-			
-		} else {
-			smoothCaret->setColor(trueCaret->getColor());
+		if (auto smoothCaret = m_fields->m_smoothCaret) {
+			smoothCaret->inputUpdated();
 		}
-
 	}
 };
+
+$on_mod(Loaded) {
+	SettingsManager::get()->load();
+}

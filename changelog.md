@@ -1,12 +1,18 @@
+# 1.0.7
+- more chroma options/fixes
+- caret blink
+- more stretch options
+- fixed geode settings menu (i think)
+- caret sizing options
+
 # 1.0.6
-- Added new awesome caret colour settings :D
+- added new awesome caret colour settings :D
 
 # 1.0.5
-- Fixed crash on startup MacOS
+- fixed crash on startup MacOS
 
 # 1.0.4
-- Disabled smooth caret in geode mod settings due to strange behaviour
-
+- disabled smooth caret in geode mod settings due to strange behaviour
 
 # 1.0.3
 - the great "i cant count" update

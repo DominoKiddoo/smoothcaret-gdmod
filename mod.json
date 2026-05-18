@@ -8,55 +8,135 @@
 	},
 	"id": "dominodev.smoothcaret",
 	"name": "Smooth Caret",
-	"version": "v1.0.6",
+	"version": "v1.0.7",
 	"developer": "dominodev",
 	"description": "Lerp That Caret!",
 	"dependencies": {
-		"geode.node-ids": ">=v1.23.3"
+		"geode.node-ids": ">=v1.23.3",
+		"nwo5.silly-api": ">=1.4.1"
 	},
 
 	"settings": {
-		"Weight":{
+		"weight": {
 			"type": "float",
-			"default": 15.0,
+			"default": 15,
 			"min": 1,
 			"name": "Weight/Speed",
 			"description": "The 'weight' (or speed) of the smoothness. Higher = faster, Lower = Slower"
 		},
 
-		"Stretch":{
+		"stretch": {
 			"type": "bool",
 			"default": false,
+			"name": "Stretch",
 			"description": "Whether or not to do a cool stretch thingy."
 		},
 
-		"custom-colour":{
+		"stretch-intensity": {
+			"type": "float",
+			"default": 1,
+			"control": {
+				"arrow-step": 0.1
+			},
+			"min": 0,
+			"name": "Stretch Intensity",
+			"description": "Cool stretch thingy width multiplier.",
+			"enable-if": "stretch"
+		},
+
+		"stretch-method": {
+			"type": "string",
+			"default": "Flat",
+			"one-of": ["Flat", "Logarithm", "Square Root"],
+			"name": "Stretch Method",
+			"description": "What method to use when calculating stretch.",
+			"enable-if": "stretch"
+		},
+
+		"thickness": {
+			"type": "float",
+			"default": 1,
+			"control": {
+				"arrow-step": 0.1
+			},
+			"min": 0.1,
+			"name": "Caret Thickness",
+			"description": "Caret width multiplier."
+		},
+
+		"opacity": {
+			"type": "int",
+			"default": 150,
+			"min": 0,
+			"max": 255,
+			"name": "Caret Opacity",
+			"description": "Caret opacity."
+		},
+
+		"blink-cursor": {
+			"type": "bool",
+			"name": "Blink Cursor",
+			"default": false,
+			"description": "Blink Cursor!"
+		},
+		"blink-speed": {
+			"type": "float",
+			"name": "Blink Speed",
+			"default": 0.5,
+			"min": 0,
+			"control": {
+				"arrow-step": 0.1
+			},
+			"description": "Cursor blink speed in seconds. Cursor will be invisible for speed seconds, then visible for speed seconds.",
+			"enable-if": "blink-cursor"
+		},
+
+		"custom-caret-colour": {
 			"type": "bool",
 			"default": false,
 			"name": "Custom Caret Colour",
 			"description": "Use a custom colour for the caret!"
 		},
-
-		"col-type":{
-			"type": "string",
-			"one-of": ["Static Colour", "Chroma"],
-			"default": "Static Colour",
-			"name": "Colour Type",
-			"description": "Type of <cr>custom colour!</c>. Static is for the colour to <cb>stay the same</c>, and chroma is to <c-ff0000>g</c><c-ff4100>a</c><c-ff8200>y</c><c-feb500>i</c><c-fdda00>f</c><c-fbff00>y</c><c-97ff22> </c><c-32ff44>t</c><c-00e077>h</c><c-00a1bb>e</c><c-0062ff> </c><c-243bff>c</c><c-4714ff>a</c><c-7a00fd>r</c><c-bd00fa>e</c><c-ff00f7>t</c>"
-		},
-
-		"col":{
+		
+		"caret-colour": {
 			"type": "color",
-			"name": "Static Colour",
+			"name": "Caret Colour",
 			"default": "#FF0000",
-			"description": "The custom caret colour! Only works if the <cb>'Colour Type'</c> is set to <co>'Static Colour'</c>"
+			"description": "The custom caret colour!",
+			"enable-if": "custom-caret-colour"
 		},
 
-		"chroma-speed":{
+		"chroma": {
+			"type": "bool",
+			"default": false,
+			"name": "Chroma",
+			"description": "<c-ff0000>G</c><c-ff4100>a</c><c-ff8200>y</c><c-feb500>i</c><c-fdda00>f</c><c-fbff00>y</c><c-97ff22> </c><c-32ff44>t</c><c-00e077>h</c><c-00a1bb>e</c><c-0062ff> </c><c-243bff>c</c><c-4714ff>a</c><c-7a00fd>r</c><c-bd00fa>e</c><c-ff00f7>t</c> your cursor!",
+			"enable-if": "custom-caret-colour"
+		},
+
+		"chroma-saturation": {
 			"type": "float",
-			"default": 10,
-			"description": "How fast it changes colours. Higher is faster, lower is slower.",
-			"min": 1
+			"name": "Chroma Saturation",
+			"default": 0.5,
+			"description": "Saturation of chroma colour. 0 = Black, 1 = White",
+			"control": {
+				"arrow-step": 0.1
+			},
+			"min": 0,
+			"max": 1,
+			"enable-if": "custom-caret-colour"
+		},
+
+		"chroma-speed": {
+			"type": "float",
+			"name": "Chroma Speed",
+			"default": 1,
+			"description": "How fast chroma cycles hue a full 360 degrees colours in seconds.",
+			"control": {
+				"arrow-step": 0.1
+			},
+			"min": 0.1,
+			"enable-if": "custom-caret-colour"
 		}
 	},
 
