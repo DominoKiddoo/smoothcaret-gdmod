@@ -183,13 +183,16 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 		}
 	}
 
-	// called on click
-	void updateCursorPosition(CCPoint position, CCRect rect) {
-		CCTextInputNode::updateCursorPosition(position, rect);
+	bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
+		if (!CCTextInputNode::ccTouchBegan(touch, event)) {
+			return false;
+		}
 
 		if (auto smoothCaret = m_fields->m_smoothCaret) {
 			smoothCaret->inputUpdated();
 		}
+		
+		return true;
 	}
 };
 
