@@ -18,4 +18,6 @@ namespace Settings {
     inline Setting<bool> chroma{"chroma"};
     inline Setting<float> chromaSaturation{"chroma-saturation"};
     inline Setting<float> chromaSpeed{"chroma-speed"};
+    inline Setting<bool> unlimitedStretch{"unlimited-stretch"};
+
 }

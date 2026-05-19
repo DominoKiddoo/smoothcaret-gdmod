@@ -53,6 +53,14 @@
 			"enable-if": "stretch"
 		},
 
+		"unlimited-stretch":{
+			"type": "bool",
+			"default": false,
+			"name": "Remove Stretch Limit",
+			"enable-if": "stretch",
+			"description": "Removes the limit to the stretch. Without this on, the stretch amount is capped to the distance from where the static caret would be to the smooth one."
+		},
+
 		"thickness": {
 			"type": "float",
 			"default": 1,

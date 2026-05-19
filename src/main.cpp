@@ -61,7 +61,12 @@ protected:
 			stretch = std::abs(velocity * stretchIntensity);
 		}
 
-		return std::clamp(1.0f + stretch, 1.0f, std::max(1.0f, dist / (this->getContentWidth() * m_baseScale)));
+		if (Settings::unlimitedStretch == true) {
+			return std::max(1.0f, 1.0f + stretch);
+		} else {
+			return std::clamp(1.0f + stretch, 1.0f, std::max(1.0f, dist / (this->getContentWidth() * m_baseScale)));
+		}
+		
 	}
 
 	virtual void update(float dt) {
@@ -188,8 +193,10 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 			return false;
 		}
 
+
 		if (auto smoothCaret = m_fields->m_smoothCaret) {
 			smoothCaret->inputUpdated();
+			m_fields->m_smoothCaret->setOpacity(Settings::opacity);
 		}
 		
 		return true;
