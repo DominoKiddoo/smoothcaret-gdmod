@@ -188,19 +188,32 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 		}
 	}
 
+
+	void caretInit() {	
+		if (auto smoothCaret = m_fields->m_smoothCaret) {
+			smoothCaret->inputUpdated();
+			smoothCaret->setOpacity(Settings::opacity);
+			smoothCaret->setVisible(true);
+		}
+	}
+
 	bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
 		if (!CCTextInputNode::ccTouchBegan(touch, event)) {
 			return false;
 		}
 
-
-		if (auto smoothCaret = m_fields->m_smoothCaret) {
-			smoothCaret->inputUpdated();
-			m_fields->m_smoothCaret->setOpacity(Settings::opacity);
-		}
+		caretInit();
 		
 		return true;
 	}
+
+
+    bool onTextFieldAttachWithIME(CCTextFieldTTF* tField) {
+		caretInit();
+        return CCTextInputNode::onTextFieldAttachWithIME(tField);
+    }
+	
+
 };
 
 $on_mod(Loaded) {

@@ -8,7 +8,7 @@
 	},
 	"id": "dominodev.smoothcaret",
 	"name": "Smooth Caret",
-	"version": "v1.0.7",
+	"version": "v1.1.0",
 	"developer": "dominodev",
 	"description": "Lerp That Caret!",
 	"dependencies": {

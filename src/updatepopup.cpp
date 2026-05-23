@@ -8,14 +8,13 @@ class $modify(MenuLayer) {
         if (!MenuLayer::init()) return false;
 
         Loader::get()->queueInMainThread([this]() {
-            log::info("MENU LAYER INITED!!");
-            if (!Mod::get()->getSavedValue<bool>("shown-update-1.0.6")) {
+            if (!Mod::get()->getSavedValue<bool>("shown-update-1.1.0")) {
                 FLAlertLayer::create(
                     "Smooth Caret",
-                    "Hello there smooth caret user! Update 1.0.6 has added cool new caret customisation settings. Give them a try!",
+                    "Hello there smooth caret user! Check settings, because theres so many new ones to try!",
                     "I will!"
                 )->show();
-                Mod::get()->setSavedValue<bool>("shown-update-1.0.6", true);
+                Mod::get()->setSavedValue<bool>("shown-update-1.1.0", true);
             }
             return true;
         });

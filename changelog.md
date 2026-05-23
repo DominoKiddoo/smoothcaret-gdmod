@@ -1,9 +1,10 @@
-# 1.0.7
+# 1.1.0
 - more chroma options/fixes
 - caret blink
 - more stretch options
-- fixed geode settings menu (i think)
+- fixed geode settings menu
 - caret sizing options
+- fixed for geode::TextInput
 
 # 1.0.6
 - added new awesome caret colour settings :D
