@@ -1,5 +1,5 @@
 {
-	"geode": "5.7.1",
+	"geode": "5.10.0",
 	"gd": {
 		"win": "2.2081",
 		"android": "2.2081",
@@ -8,12 +8,12 @@
 	},
 	"id": "dominodev.smoothcaret",
 	"name": "Smooth Caret",
-	"version": "v1.1.0",
+	"version": "v1.1.1",
 	"developer": "dominodev",
 	"description": "Lerp That Caret!",
 	"dependencies": {
 		"geode.node-ids": ">=v1.23.3",
-		"nwo5.silly-api": ">=1.4.1"
+		"nwo5.silly-api": ">=2.0.0"
 	},
 
 	"settings": {

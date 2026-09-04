@@ -1,3 +1,7 @@
+# 1.1.1
+- Fix for new sillyapi
+
+
 # 1.1.0
 - more chroma options/fixes
 - caret blink
