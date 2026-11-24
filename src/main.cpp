@@ -1,7 +1,8 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/CCTextInputNode.hpp>
-#include <nwo5.silly-api/include/utils/include.hpp>
+#include <nwo5.silly-api/utils/include.hpp>
 #include "settings.hpp"
+
 
 using namespace geode::prelude;
 
@@ -50,7 +51,7 @@ protected:
 
 		float stretch;
 		if (Settings::stretchMethod == "Logarithm") {
-			// different stretch intensity multipliers so they stretch somewhat similarly on the same stretch intensity settings (kinda)
+			// different stretch intensity multipliers so they stretch somewhat similarly on the same stretch intensity SettingsCache (kinda)
 			float stretchIntensity = Settings::stretchIntensity * 5.0f;
 			stretch = std::log1pf(velocity * stretchIntensity);
 		} else if (Settings::stretchMethod == "Square Root") {
@@ -136,7 +137,7 @@ public:
 		m_blinkVisible = true;
 		this->setOpacity(Settings::opacity);
 
-		// fixes mod settings popup idk it apparently just unschedules shit when u type and i cant find y but wtv
+		// fixes mod SettingsCache popup idk it apparently just unschedules shit when u type and i cant find y but wtv
 		// still kinda broken if u use sliders to adjust inputs but wtv good enough im tired
 		
 		this->scheduleUpdate(); // dont need to unschedule since there can only b one update function
@@ -216,6 +217,3 @@ class $modify(MyCCTextInputNode, CCTextInputNode) {
 
 };
 
-$on_mod(Loaded) {
-	SettingsManager::get()->load();
-}
